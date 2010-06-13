@@ -16,11 +16,13 @@ module Termtter::Client
     :name => :list, :aliases => [:l],
     :exec_proc => lambda {|arg|
       a = {}
-      if /\-([\d]+)/ =~ arg
-        options = {:count => $1}
-        arg = arg.gsub(/\-([\d]+)/, '')
-      else
-        options = {}
+      options = {}
+      arg.gsub!(/\s*([-#])(\d+)/) do
+        case $1
+        when '-' then options[:count] = $2
+        when '#' then options[:page]  = $2
+        end
+        ''
       end
 
       last_error = nil
@@ -65,7 +67,7 @@ module Termtter::Client
       output(statuses, Termtter::Event.new(event, a))
       raise last_error if last_error
     },
-    :help => ["list,l [USERNAME]/[SLUG] [-COUNT]", "List the posts"]
+    :help => ["list,l [USERNAME]/[SLUG] [-COUNT] [#PAGE]", "List the posts"]
   )
 
   register_command(
