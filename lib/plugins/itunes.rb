@@ -8,10 +8,10 @@ end
 config.plugins.itunes.set_default(:prefix, 'Listening now:')
 config.plugins.itunes.set_default(:suffix, '#iTunes #listening')
 config.plugins.itunes.set_default(:format,
-  '<%=prefix%> <%=track_name%> (<%=time%>) <%=artist%> <%=album%> <%=suffix%>')
+  '<%=prefix%> <%=track_name%> (<%=time%>) <%=artist%> <%=album%> <%=uri%> <%=suffix%>')
 
 Termtter::Client.register_command(
-  :name => :listening_now, :aliases => [:ln, :itunes, :music, :m],
+  :name => :listening_now, :aliases => [:ln, :itunes, :music],
   :help => ['listening_now,ln,itunes,music', "Post the information of listening now."],
   :exec => lambda {|args|
     begin
@@ -21,6 +21,7 @@ Termtter::Client.register_command(
       genre      = Appscript.app('iTunes').current_track.genre.get
       time       = Appscript.app('iTunes').current_track.time.get
       album      = Appscript.app('iTunes').current_track.album.get
+      uri        = "http://www.last.fm/music/#{artist.split(' ').join('+')}/_/#{track_name.split(' ').join('+')}"
       suffix     = config.plugins.itunes.suffix
       erbed_text = ERB.new(config.plugins.itunes.format).result(binding)
       erbed_text.gsub!(/\s{2,}/, ' ')
