@@ -32,6 +32,7 @@ module Termtter::Client
     system "#{cmd} #{uri}"
   end
 
+  config.plugins.uri_open.set_default :some, 5
   register_command(
     :name => :'uri-open', :aliases => [:uo],
     :exec_proc => lambda {|arg|
@@ -42,6 +43,12 @@ module Termtter::Client
         public_storage[:uris].
           each {|uri| open_uri(uri) }.
           clear
+      when /^some\s*(\d*)$/
+        some = $1.empty? ? config.plugins.uri_open.some : $1.to_i
+        some.times do
+          next unless uri = public_storage[:uris].shift
+          open_uri(uri)
+        end
       when /^list$/
         public_storage[:uris].
           enum_for(:each_with_index).
@@ -58,6 +65,7 @@ module Termtter::Client
         puts "clear uris"
       when /^in\s+(.*)$/
         $1.split(/\s+/).each do |id|
+          id = Termtter::Client.typable_id_to_data(id) unless id =~ /\d+/
           if s = Termtter::API.twitter.show(id) rescue nil
             URI.extract(s.text, PROTOCOLS).each do |uri|
               open_uri(uri)
@@ -72,7 +80,7 @@ module Termtter::Client
       end
     },
     :completion_proc => lambda {|cmd, arg|
-      %w(all list delete clear in).grep(/^#{Regexp.quote arg}/).map {|a| "#{cmd} #{a}" }
+      %w(all list delete clear in some).grep(/^#{Regexp.quote arg}/).map {|a| "#{cmd} #{a}" }
     }
   )
 end
@@ -83,3 +91,5 @@ end
 #
 # KNOWN BUG
 # * In Debian, exit or C-c in the termtter would kill your firefox.
+#
+# see for some option: http://d.hatena.ne.jp/keyesberry/20100125/p1
