@@ -190,6 +190,10 @@ module Termtter::Client
     :name => :search, :aliases => [:s],
     :exec_proc => lambda {|arg|
       search_option = config.search.option.empty? ? {} : config.search.option
+      arg.gsub!(/\s*#(\d+)$/) { search_option[:page] = $1 ; ''}
+      if arg.empty? && tags = public_storage[:hashtags]
+        arg = tags.to_a.join(" ") 
+      end
       statuses = Termtter::API.twitter.search(arg, search_option)
       public_storage[:search_keywords] << arg
       output(statuses, SearchEvent.new(arg))
@@ -197,7 +201,7 @@ module Termtter::Client
     :completion_proc => lambda {|cmd, arg|
       public_storage[:search_keywords].grep(/^#{Regexp.quote(arg)}/).map {|i| "#{cmd} #{i}" }
     },
-    :help => ["search,s TEXT", "Search for Twitter"]
+    :help => ["search,s TEXT [#PAGE]", "Search for Twitter"]
   )
   register_hook(:highlight_for_search_query, :point => :pre_coloring) do |text, event|
     case event
